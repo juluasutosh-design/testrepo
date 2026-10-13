@@ -64,5 +64,7 @@ jobs:
       Release: ${{ inputs.Release }}
       environment_files: ${{ inputs.environment_files }}
       config_file_Type: ${{ inputs.config_file_Type }}
+      repo_name: ${{ github.repository }}
+      branch_name: ${{ github.ref_name}}
     secrets:
       MYSECRET: ${{ secrets.MYSECRET }}
