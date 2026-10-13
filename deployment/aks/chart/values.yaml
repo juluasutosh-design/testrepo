@@ -1,0 +1,350 @@
+julu-deploy:
+
+  global:
+    juluAppName: "julu-api"
+    clusterName: "julu-eastus2"
+    image:
+      name: xyz-service
+      tag: 1.061.9
+      registry: julu.azurecr.io
+      alias: "dmds-service"
+    env: qa
+    # -- Recreate pods for every deployment
+    reCreatePod:
+     enabled: true
+    ddServiceName: julu-service
+
+  # Enable Scaledobject based HPA for application pod
+  # THIS IS AN OPTIONAL FIELD. Configure if you need hpa for your application.
+  scaledobject:
+    enabled: true
+
+# Service type for your application.
+# THIS IS A MANDATORY FIELD.
+# Options: LoadBalancer,ClusterIP,NodePort,Headless
+# -- Service Type of your application
+  serviceType: ClusterIP
+
+# Defining environment variables specific to application.
+# THIS IS AN OPTIONAL FIELD. Configure if you have to pass environment variables to the application.
+# -- Non secret environment variables need for the application.
+  envConfig:
+    ENV: qa
+    infra: k8s
+    dmds-hazelcast-servicePort: 5701
+    hazelcast-enabled: false
+    # UMB properties
+    umb-limit: 20
+    dmds-context-carry-threshold: 40
+    security-oauth-default-provider: ping
+    security-oauth-mode: dual
+    security-okta-token-url: /v1/token
+
+
+# KeyVault configuration to pull secrets from
+# Provide SP details as Name and not as an ID.
+# -- Keyvault configurations to pull secrets
+  keyVault: {}
+# # -- Keyvault Name to pull secrets for the application
+#   name:
+# # -- Service Principal to use to pull secrets from Keyvault
+#   spName:
+
+# Define your env variables for your application below.
+# Secrets mentioned below will pulled from Keyvault configured above.
+# -- Environment secrets of the application
+  envSecrets:
+    cdm-database-ndx-password: cdm-database-ndx-password
+    cdm-database-cdm-password: cdm-database-cdm-password
+
+# Configuring application commands for deployment.
+# THIS IS AN OPTIONAL FIELD. Configure if you have pass commands to applications.
+# -- Commands passed in runtime
+  appCommands: []
+  # - sleep 50s
+
+# Configuring application arguments for deployment.
+# THIS IS AN OPTIONAL FIELD. Configure if you have pass arguments to applications.
+# -- Arguments passed in runtime
+  appArgs: []
+  # - echo $PATH
+
+# Below section provides option to configure volumes for your application
+# -- Volume and Mount configuration for Pod
+  volumes:
+  # -- File configmap Volume and Mount configuration
+    fileConf: {}
+  #   mountPath: /etc/config # Common path for File Configmap
+  #   readOnly: true # by default RO is true
+  #   items:
+  #     - key: sample.txt
+  #       path: sample.txt
+  #     - key: sample.yaml
+  #       path: sample.yaml
+  # -- AzureFile Volume and Mount configuration
+    azureFile: {}
+  #   mountPath: /models
+  #   readOnly: true
+  #   shareName: models
+  # -- EmptyDir Volume and Mount configuration
+    emptyDir: {}
+    # mountPath: /cache
+    # sizeLimit: 500Mi
+
+  rootFs:
+    readOnly: false
+
+  runAsNonRoot:
+    enabled: false
+    
+# -- Secrets to be used for AzureFile
+  azureFileSecret: {}
+  # azurestorageaccountname: ENV1
+  # azurestorageaccountkey: ENV2
+
+# Enable Datadog APM and Logs using below parameters.
+# THIS IS AN OPTIONAL FIELD. Configure when you need DD APM and DD Logs.
+# By Default, APM and Logs will be disabled.
+# -- To enable Datadog APM
+  ddApm:
+    enabled: false
+
+# -- To enable Datadog Logs
+  ddLogs:
+    enabled: false
+
+# Enable DD based HPA for application pod
+# THIS IS AN OPTIONAL FIELD. Configure if you need hpa for your application.
+# -- To enable Horizontal Pod Autoscaling using datadog metrics
+  ddHpa:
+    enabled: false
+
+  # Log pipelines present in DD.
+# Select log pipeline more suitable for your application from: https://app.datadoghq.com/logs/pipelines
+# -- Datadog Source Pipeline Logs
+  ddSourcePipeline: julu-common-logging
+
+# Define min replicas for each application pods here.
+# For applications without HPA, this will be the only replicacount.
+# Default value will be applied to all applications.
+# THIS IS A MANDATORY FIELD.
+# -- Minimum Replicas of application pod
+  minReplicas: 2
+
+# Define your max replicas for your HPA enabled applications (for both dd based on k8s based hpa).
+# Based on the load on the pods, replicacount increases and decreases based on min and max replicas of HPA enabled applications.
+# Default value will be applied to all applications.
+# THIS IS AN OPTIONAL FIELD. Configure only for hpa enabled applications.
+# -- Maximum Replicas of application pod
+  maxReplicas: 5
+
+# Configuring DD based HPA query for your application.
+# Below configurations decides the criteria to increase and decreases the pod.
+# THIS IS AN OPTIONAL FIELD. Configure only for ddhpa enabled applications.
+# -- Datadog query used for HPA
+  ddHpaQuery: {}
+  # cpu: ((sum:kubernetes.cpu.usage.total{kube_namespace:dd-namespace,kube_deployment:dd-deployment} / 1000000000) / sum:kubernetes.cpu.limits{kube_namespace:dd-namespace,kube_deployment:dd-deployment}) * 100
+  # memory: avg:kubernetes.memory.usage_pct{kube_namespace:dd-namespace,kube_deployment:dd-deployment} * 100
+
+# Set the threshold values for above mentioned queries.
+# Based on the values it kicks the autoscaling in
+# Always manage this parameter at environemnt specific yaml
+# -- Datadog Query Threshold value used for HPA
+  ddHpaValue: {}
+  # cpu : 10
+  # memory: 50
+
+# -- Enable Hazelcast for your application
+  hazelCast:
+    enabled: true
+
+# -- Native K8s HPA enablement
+  k8sHpa:
+    enabled: false
+
+# Configuring K8s based HPA metrics for your application.
+# Below configurations decides the criteria to increase and decreases the pod.
+# THIS IS AN OPTIONAL FIELD. Configure only for k8s based hpa enabled applications.
+# -- Native K8s HPA metrics configurations
+  k8sHpaMetrics: []
+  # - type: Resource
+  #   resource:
+  #     name: cpu
+  #     target:
+  #       type: Utilization
+  #       averageUtilization: 75
+
+# Below parameter controls the hpa autoscaling of your application.
+# Default Values of the behaviors can be found in this link : https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#default-behavior
+# If not defined under below parameter default values shown in above link takes effect.
+# To know what each parameter does, please refer: https://github.com/kubernetes/enhancements/blob/master/keps/sig-autoscaling/853-configurable-hpa-scale-velocity/README.md
+# -- HPA behavior controls
+  hpaBehavior: {}
+  # scaleDown:
+  #   stabilizationWindowSeconds: 120
+  # scaleUp:
+  #   stabilizationWindowSeconds: 300
+
+# Custom Labels thats needs to added to Applications.
+# NOTE: Labels needed for normal deployment are fetched through _helpers.tpl file and below section has no impact on that.
+# THIS IS AN OPTIONAL FIELD. Configure if you want to add labels to your applications.
+# -- Adding more labels to the application
+  customAppLabels:
+    autoscaling.cast.ai/removal-disabled: "false"
+  # apptype: spring
+
+# Custom Nginx Annotations if needed to be added to Ingress yaml file.
+# NOTE : Necessary annotations are already in-built inside ingress yaml and it cannot be modified through below section.
+# This section is just to add additonal annotations if needed.
+# THIS IS AN OPTIONAL FIELD. Configure if you want to add new nginx annotations to your application ingress.
+# -- Nginx Annotations to ingress
+  customNginxAnnotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+
+  customAppAnnotations:
+    instrumentation.opentelemetry.io/inject-java: "otel/instrumentation"
+# Assigning priorities for scheduling pods.
+# Below are the list of available priorityClass that can be used.
+# (a) besteffort (Default) (b) stateless (c) stateful (d) batch-interruptable (e) batch-uninterruptable
+# Priority Rank : batch-uninterruptable>batch-uninterruptable>stateful>stateless>besteffort
+# -- Priority class for the pods
+  priorityClass: ""
+
+# Serviceport and Container port for the application.
+# Default values will be applied to all applications.
+# Configure application specific ports to override default value.
+# THIS IS A MANDATORY FIELD.
+# -- Port for container and service
+  ports: 8080
+
+# Healthcheck path for liveness and readiness probe
+  livenessProbe:
+  # -- Path for the liveness healthcheck
+    path: /dmds-web/actuator/health
+  # -- Initial Delay seconds for the liveness healthcheck
+    initialDelaySeconds: 120
+  # -- Period seconds for the liveness healthcheck
+    periodSeconds: 45
+
+  readinessProbe:
+  # -- Path for the readiness healthcheck
+    path: /dmds-web/actuator/health
+  # -- Initial Delay seconds for the readiness healthcheck
+    initialDelaySeconds: 120
+  # -- Period seconds for the readiness healthcheck
+    periodSeconds: 60
+
+  # Lifecycle for your container
+# THIS IS AN OPTIONAL FIELD. Configure if you want to add lifecycle to your container.
+# Refer official documentation for more details: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+# -- Lifecycle for your container
+  lifeCycle:
+    preStop:
+      httpGet:
+        path: /dmds-web/actuator/shutDownHook
+        port: 8080
+  # preStop:
+  #   exec:
+  #     command:
+  #       - /bin/sh
+  #       - -c
+  #       - sleep 10
+  # postStart:
+  #   exec:
+  #     command:
+  #       - /bin/sh
+  #       - -c
+  #       - sleep 10
+
+  terminationGracePeriodSeconds: 250
+  
+# Whitelist your application that depends on GPU.
+# IMPORTANT : Please reach to CCOE team channel to add Nvidia GPU driver to your cluster.
+# THIS IS AN OPTIONAL FIELD. Configure if your application is GPU based.
+  gpu:
+  # -- Enable GPU if needed
+    enabled: false
+  # -- GPU limits for pod
+    limits: 1
+
+# For non gpu based application, configure pod resources like CPU and memory using below parameter.
+  podResources:
+    requests:
+    # -- CPU requests for pod
+      cpu: 300m
+    # -- Memory request for pod
+      memory: 500Mi
+    limits:
+    # -- Memory limits for pod
+      memory: 750Mi
+
+# Ingress Path configurations
+# Default values will be applied to all applications.
+# Configure application specific ports to override default value.
+# THIS IS OPTIONAL FIELD. Configure if your application service type is ClusterIP and want to customize deafult path.
+  ingress:
+  # -- Ingress Path
+    path: /(.*)
+  # -- DNS Zone for Ingress
+    dnsZone: "azure-papinpus-np.nielsencsp.net"
+    tls:
+    # -- Enable tls for HTTPS
+      enabled: true
+
+## Topology Spread Constraints are used to distribute replicas of a workload across a set of nodes with a given label key
+# e.g., zone: 1, zone: 2, zone: 3
+# The kubernetes docs will have more information on how to customize your topologySpreadConstraints
+# OPTIONAL: You can skip setting the label selector, it will be set to the same selector as your deployment's matchLabels
+# https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+# In order to use this section remove the {} on the following line and uncomment the example
+# -- Topology constrainsts for pod
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app: dmds-service-version-env
+
+## Affinities and anti-affinities are similar to nodeSelectors, you use these to specify nodes that you want your workload to run on
+# This can be based on labels that the node has (in the case of node Affinity)
+# or based on pods that are already running on that node(in the case of Pod affinity)
+# The kubernetes docs will have more information on how to customize your affinites
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+# In order to use this section remove the {} on the following line and uncomment the example
+# -- Affinity configurations for pod
+  affinity: {}
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     - labelSelector:
+  #         matchExpressions:
+  #           - key: app
+  #             operator: In
+  #             values:
+  #               - myApp
+  #       topologyKey: "kubernetes.io/hostname"
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #       - matchExpressions:
+  #           - key: zone
+  #             operator: NotIn
+  #             values:
+  #               - zoneC
+
+# In general pods are not scheduled on tainted nodes. If you want to schedule your pod in one of the
+# tainted node, toleration must be configured.
+# If you are deploying your pod only on tainted node, then you need configure both affinity and toleration.
+# Please reach out to CCOE team for toleration details.
+# -- Toleration configurations for pod
+  tolerations: []
+  # - key: "node"
+  #   operator: "Equal"
+  #   value: "nc4as"
+  #   effect: "NoSchedule"
+
+# Node Selector configurations for pod
+# -- Node Selector configurations for pod
+  nodeSelector: {}
+  # zone: zoneC
+    
