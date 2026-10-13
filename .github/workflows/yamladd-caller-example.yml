@@ -58,7 +58,7 @@ on:
 
 jobs:
   OneClick-Yaml:
-    uses: juluasutosh-design/bagharepo/.github/workflows/yamladd.yml@oneClickYaml
+    uses: juluasutosh-design/bagharepo/.github/workflows/yamladd.yml@release/oneClickYaml
     with:
       OverrideYaml: ${{ inputs.OverrideYaml }}
       Release: ${{ inputs.Release }}
