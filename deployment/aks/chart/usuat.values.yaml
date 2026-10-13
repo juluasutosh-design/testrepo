@@ -1,7 +1,7 @@
 julu-deploy:
   global:
     releaseVersion: "1"
-    env: prod
+    env: uat
     juluAppName: "exp"
     ddServiceName: "exp-ui"
     reCreatePod:
