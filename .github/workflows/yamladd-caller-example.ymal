@@ -1,0 +1,68 @@
+name: One click Commit Caller
+
+on:
+  workflow_dispatch:
+    inputs:
+      OverrideYaml:
+        description: "Provide path-based override input, e.g. region~[europe]~dns~julu.com;"
+        type: string
+        required: true
+        default: "region~[europe]~dns~julu.com"
+      Release:
+        description: "Select Release , Used to create branch with name and also used in PR title"
+        type: choice
+        required: true
+        options:
+          - 2026-JAN-I
+          - 2026-JAN-II
+          - 2026-FEB-I
+          - 2026-FEB-II
+          - 2026-MAR-I
+          - 2026-MAR-II
+          - 2026-APR-I
+          - 2026-APR-II
+          - 2026-MAY-I
+          - 2026-MAY-II
+          - 2026-MAY-III
+          - 2026-JUN-I
+          - 2026-JUN-II
+          - 2026-JUL-I
+          - 2026-JUL-II
+          - 2026-AUG-I
+          - 2026-AUG-II
+          - 2026-SEP-I
+          - 2026-SEP-II
+          - 2026-OCT-I
+          - 2026-OCT-II
+          - 2026-OCT-III
+          - 2026-NOV-I
+          - 2026-NOV-II
+          - 2026-DEC-I
+          - 2026-DEC-II
+      environment_files:
+        description: "Provide environment specific yaml file name, i.e default points to values.yaml file only"
+        type: choice
+        required: true
+        options:
+          - "usuat"
+          - "euuat"
+          - "usuat,euuat"
+          - "default"
+        default: "usuat"
+      config_file_Type:
+        description: "Provide the Type of yaml file to be updated i.e cname or deploy"
+        type: choice
+        required: true
+        options:
+          - "deploy"
+
+jobs:
+  call-yamladd:
+    uses: your-org/central-yaml-tools-repo/.github/workflows/yamladd.yml@main
+    with:
+      OverrideYaml: ${{ inputs.OverrideYaml }}
+      Release: ${{ inputs.Release }}
+      environment_files: ${{ inputs.environment_files }}
+      config_file_Type: ${{ inputs.config_file_Type }}
+    secrets:
+      MYSECRET: ${{ secrets.MYSECRET }}
