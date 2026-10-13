@@ -1,0 +1,27 @@
+julu-deploy:
+  global:
+    releaseVersion: "1"
+    env: prod
+    juluAppName: "exp"
+    ddServiceName: "exp-ui"
+    reCreatePod:
+      enabled: true
+    image:
+      name: exp-ui
+      tag: 268.2.7
+      registry: xyz.azurecr.io
+    minReplicas: 2
+    maxReplicas: 8
+    
+  keyVault:
+  # -- tag: 25.25.25 Keyvault Name to pull secrets for the application
+    name: mykv
+  # -- Service Principal to use to pull secrets from Keyvault
+    spName: mysp
+  # -- Refresh interval for the secrets to be pulled from Keyvault
+    refreshInterval: "5m"
+  # -- External Secret Version
+    version: v1beta1      
+  
+  envSecrets: 
+    ENV1: ENV1
